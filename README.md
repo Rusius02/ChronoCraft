@@ -50,4 +50,4 @@ Specify the open-source license under which your project is released. Common lic
 
 **Note:** Do not steal or reproduce the code.
 
-© [Stiévenart Arien] - 2023
+© [Stiévenart Adrien] - 2023
