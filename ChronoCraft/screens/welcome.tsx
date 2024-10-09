@@ -1,22 +1,27 @@
+// src/Welcome.tsx
 import React from 'react';
-import { View, Text, Button } from 'react-native';
-import { NavigationProp } from '@react-navigation/native';
-import LoginScreen from './Login';
+import {View, Text, StyleSheet} from 'react-native';
 
-interface WelcomeScreenProps {
-  navigation: NavigationProp<any>;
-}
-
-function WelcomeScreen({ navigation }: WelcomeScreenProps) {
+const Welcome = () => {
   return (
-    <View>
-      <Text>Welcome to Your App</Text>
-      <Button
-  title="Login"
-  onPress={() => navigation.navigate('Login')}
-/>
+    <View style={styles.container}>
+      <Text style={styles.welcomeText}>Welcome to ChronoCraft!</Text>
     </View>
   );
-}
+};
 
-export default WelcomeScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  welcomeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+});
+
+export default Welcome;
