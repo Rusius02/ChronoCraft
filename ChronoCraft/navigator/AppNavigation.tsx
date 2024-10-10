@@ -1,16 +1,17 @@
-// AppNavigator.js
+// AppNavigation.tsx
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 
-import WelcomeScreen from '../screens/Welcome';
-import LoginScreen from '../screens/login';
+import WelcomeScreen from '../screens/welcome';
+import LoginScreen from '../screens/login'; // Ensure this path is correct
 import PlanScreen from '../screens/Plans';
 import PlanDetailScreen from '../screens/PlanDetailScreen';
 import AddPlanScreen from '../screens/addPlans';
 import ChronoScreen from '../screens/Chrono';
+import { RootStackParamList } from './types'; // Import types
 
-const Stack = createStackNavigator();
+const Stack = createStackNavigator<RootStackParamList>();
 
 function AppNavigator() {
   return (
