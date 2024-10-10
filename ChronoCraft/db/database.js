@@ -100,3 +100,43 @@ export const getPlans = () => {
     });
   });
 };
+// Récupérer un plan spécifique par ID
+export const getPlanById = (planId) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'SELECT * FROM Plans WHERE id = ?',
+          [planId],
+          (tx, results) => {
+            if (results.rows.length > 0) {
+              resolve(results.rows.item(0)); // Retourne le premier résultat
+            } else {
+              reject('Plan non trouvé');
+            }
+          },
+          (tx, error) => reject(error)
+        );
+      });
+    });
+  };
+  
+  // Récupérer les activités pour un plan donné
+  export const getActivitiesForPlan = (planId) => {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(
+          'SELECT * FROM Activities WHERE planId = ?',
+          [planId],
+          (tx, results) => {
+            const activities = [];
+            for (let i = 0; i < results.rows.length; i++) {
+              activities.push(results.rows.item(i));
+            }
+            resolve(activities);
+          },
+          (tx, error) => reject(error)
+        );
+      });
+    });
+  };
+  

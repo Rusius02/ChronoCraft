@@ -1,74 +1,80 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Button, TouchableOpacity } from 'react-native';
+// ChronoScreen.tsx
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet } from 'react-native';
+import Sound from 'react-native-sound';
 
-const ChronoComponent = () => {
-  const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
+// Assurez-vous que les sons soient disponibles
+Sound.setCategory('Playback');
+
+const ChronoScreen = ({ route, navigation }) => {
+  const { activities } = route.params;
+  const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [timer, setTimer] = useState(null);
 
   useEffect(() => {
-    if (isRunning) {
-      const newTimer = setInterval(() => {
-        setTime(prevTime => {
-          const newSeconds = prevTime.seconds + 1;
-
-          if (newSeconds === 60) {
-            return {
-              hours: prevTime.hours,
-              minutes: prevTime.minutes + 1,
-              seconds: 0,
-            };
-          }
-
-          if (prevTime.minutes === 60) {
-            return {
-              hours: prevTime.hours + 1,
-              minutes: 0,
-              seconds: newSeconds,
-            };
-          }
-
-          return { ...prevTime, seconds: newSeconds };
-        });
-      }, 1000);
-
-      setTimer(newTimer);
-    } else if (!isRunning && timer) {
-      clearInterval(timer);
-      setTimer(null);
+    if (activities.length > 0) {
+      setTimeRemaining(activities[currentActivityIndex].duration);
     }
+  }, [activities]);
 
-    // Cleanup function to clear the timer when the component unmounts
+  useEffect(() => {
+    let timer;
+    if (isRunning && timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining((prevTime) => prevTime - 1);
+        playBeep();
+      }, 1000);
+    } else if (timeRemaining === 0) {
+      clearInterval(timer);
+      playEndBeep();
+      if (currentActivityIndex < activities.length - 1) {
+        setCurrentActivityIndex(currentActivityIndex + 1);
+        setTimeRemaining(activities[currentActivityIndex + 1].duration);
+      } else {
+        setIsRunning(false);
+      }
+    }
     return () => clearInterval(timer);
-  }, [isRunning, timer]);
+  }, [isRunning, timeRemaining]);
 
-  const handleStartStop = () => {
-    setIsRunning(!isRunning);
-    console.log(isRunning ? "Stopping timer..." : "Starting timer...");
+  const playBeep = () => {
+    const beep = new Sound(require('../assets/sounds/Beep_Exercices.wav'), (error) => {
+      if (error) {
+        console.log('Failed to load sound', error);
+        return;
+      }
+      beep.play((success) => {
+        beep.release(); // Libération de la ressource
+      });
+    });
   };
 
-  const handleReset = () => {
-    setIsRunning(false);
-    setTime({ hours: 0, minutes: 0, seconds: 0 });
-    clearInterval(timer); // Stop the timer
-    console.log("Timer reset.");
+  const playEndBeep = () => {
+    const endBeep = new Sound('../assets/sounds/End_Beep.wav', Sound.MAIN_BUNDLE, (error) => {
+      if (error) {
+        console.log('Failed to load sound', error);
+        return;
+      }
+      endBeep.play((success) => {
+        endBeep.release(); // Libération de la ressource
+      });
+    });
+  };
+
+  const startTimer = () => {
+    setIsRunning(true);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.timeDisplay}>
-        {String(time.hours).padStart(2, '0')}:
-        {String(time.minutes).padStart(2, '0')}:
-        {String(time.seconds).padStart(2, '0')}
+      <Text style={styles.title}>
+        {activities[currentActivityIndex]?.name || 'Fin des activités'}
       </Text>
-      <View style={styles.buttonContainer}>
-      <TouchableOpacity style={styles.button} onPress={handleStartStop}>
-       <Text style={styles.buttonText}>{isRunning ? "Stop" : "Start"}</Text>
-    </TouchableOpacity>
-    <TouchableOpacity style={styles.button} onPress={handleReset}>
-      <Text style={styles.buttonText}>Reset</Text>
-    </TouchableOpacity>
-      </View>
+      <Text style={styles.timer}>{timeRemaining}s</Text>
+      {!isRunning && (
+        <Button title="Démarrer" onPress={startTimer} />
+      )}
     </View>
   );
 };
@@ -78,29 +84,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#282c34',
   },
-  timeDisplay: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#61dafb',
+    marginBottom: 20,
+  },
+  timer: {
     fontSize: 48,
     fontWeight: 'bold',
+    color: '#ffffff',
     marginBottom: 20,
-    color: '#ffffff', // White text color for better visibility on dark background
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '60%',
-  },
-  button: {
-    backgroundColor: '#6200ee', // Color of the button
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
-  },
-  buttonText: {
-    color: '#ffffff', // White text color
-    fontSize: 18,
-  },
-  
 });
 
-export default ChronoComponent;
+export default ChronoScreen;
