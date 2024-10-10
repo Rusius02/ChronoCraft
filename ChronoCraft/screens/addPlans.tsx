@@ -1,88 +1,110 @@
+// AddPlanScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  FlatList,
+} from 'react-native';
+import { addPlan, addActivity } from '../db/database'; // Importez les fonctions d'ajout
 
 const AddPlanScreen = ({ navigation }) => {
-  const [planName, setPlanName] = useState(''); // State for the plan name
-  const [activityName, setActivityName] = useState(''); // State for the activity name
-  const [activityDescription, setActivityDescription] = useState(''); // State for the activity description
-  const [activityDuration, setActivityDuration] = useState(''); // State for the activity duration
-  const [activities, setActivities] = useState([]); // State for activities
+  const [planName, setPlanName] = useState('');
+  const [activityName, setActivityName] = useState('');
+  const [activityDescription, setActivityDescription] = useState('');
+  const [activityDuration, setActivityDuration] = useState('');
+  const [activities, setActivities] = useState([]);
 
-  const addActivity = () => {
-    if (activityName.trim() && activityDescription.trim() && activityDuration.trim()) {
-      // Add new activity to the list
-      setActivities([...activities, { name: activityName, description: activityDescription, duration: activityDuration }]);
-      // Clear input fields
-      setActivityName('');
-      setActivityDescription('');
-      setActivityDuration('');
-    } else {
-      alert('Please fill in all fields for the activity.');
+  const handleAddPlan = async () => {
+    if (!planName) {
+      Alert.alert('Erreur', 'Veuillez entrer un nom de plan.');
+      return;
+    }
+
+    try {
+      const result = await addPlan(planName);
+      const planId = result.insertId;
+
+      // Ajouter les activités associées au plan
+      for (const activity of activities) {
+        await addActivity(planId, activity.name, activity.description, activity.duration);
+      }
+
+      Alert.alert('Succès', 'Plan ajouté avec succès.');
+      navigation.navigate('Plans'); // Naviguer vers l'écran Plans
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du plan: ', error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors de l\'ajout du plan.');
     }
   };
 
-  const savePlan = () => {
-    if (planName.trim() && activities.length > 0) {
-      // Save the plan logic here
-      console.log('Plan:', planName);
-      console.log('Activities:', activities);
-
-      // Clear inputs
-      setPlanName('');
-      setActivities([]);
-
-      // Navigate back to Plans screen
-      navigation.navigate('Plans');
-    } else {
-      alert('Please fill in the plan name and add at least one activity.');
+  const handleAddActivity = () => {
+    if (!activityName || !activityDescription || !activityDuration) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs d\'activité.');
+      return;
     }
+
+    // Ajoute l'activité à la liste d'activités
+    setActivities(prevActivities => [
+      ...prevActivities,
+      {
+        name: activityName,
+        description: activityDescription,
+        duration: parseInt(activityDuration),
+      },
+    ]);
+
+    // Réinitialise les champs d'entrée d'activité
+    setActivityName('');
+    setActivityDescription('');
+    setActivityDuration('');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Add New Plan</Text>
+      <Text style={styles.title}>Ajouter un Plan</Text>
       <TextInput
         style={styles.input}
-        placeholder="Enter plan name"
+        placeholder="Nom du Plan"
         value={planName}
         onChangeText={setPlanName}
       />
-
-      <Text style={styles.subtitle}>Add Activity</Text>
+      <Text style={styles.title}>Ajouter une Activité</Text>
       <TextInput
         style={styles.input}
-        placeholder="Activity Name"
+        placeholder="Nom de l'Activité"
         value={activityName}
         onChangeText={setActivityName}
       />
       <TextInput
         style={styles.input}
-        placeholder="Description"
+        placeholder="Description de l'Activité"
         value={activityDescription}
         onChangeText={setActivityDescription}
       />
       <TextInput
         style={styles.input}
-        placeholder="Duration (seconds)"
-        value={activityDuration}
+        placeholder="Durée (en secondes)"
         keyboardType="numeric"
+        value={activityDuration}
         onChangeText={setActivityDuration}
       />
-      <Button title="Add Activity" onPress={addActivity} />
-
-      <Text style={styles.subtitle}>Added Activities</Text>
+      <Button title="Ajouter l'Activité" onPress={handleAddActivity} />
+      <Button title="Ajouter le Plan" onPress={handleAddPlan} />
       <FlatList
         data={activities}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={styles.activityItem}>
-            <Text style={styles.activityText}>Name: {item.name}</Text>
-            <Text style={styles.activityText}>Description: {item.description}</Text>
-            <Text style={styles.activityText}>Duration: {item.duration} seconds</Text>
+          <View style={styles.activityContainer}>
+            <Text style={styles.activityText}>{item.name}</Text>
+            <Text style={styles.activityText}>{item.description}</Text>
+            <Text style={styles.activityText}>Durée: {item.duration}s</Text>
           </View>
         )}
       />
-      <Button title="Save Plan" onPress={savePlan} style={styles.saveButton} />
     </View>
   );
 };
@@ -91,41 +113,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121212', // Dark background color
-    padding: 20,
+    padding: 16,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff', // White text for the title
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#ffffff', // White text for subtitle
-    marginVertical: 10,
+    marginBottom: 16,
   },
   input: {
-    width: '100%', // Full width input
-    padding: 10,
-    borderColor: '#ffffff', // White border for input
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
-    color: '#ffffff', // White text in input
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
-  activityItem: {
-    backgroundColor: '#1E1E1E', // Dark background for activity items
+  activityContainer: {
     padding: 10,
-    marginVertical: 5,
-    borderRadius: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
   activityText: {
-    color: '#ffffff', // White text for activity details
-  },
-  saveButton: {
-    marginTop: 20,
+    fontSize: 16,
   },
 });
 

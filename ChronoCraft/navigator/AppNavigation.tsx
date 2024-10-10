@@ -1,6 +1,6 @@
 // AppNavigation.tsx
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import WelcomeScreen from '../screens/welcome';
@@ -12,10 +12,18 @@ import ChronoScreen from '../screens/Chrono';
 import { RootStackParamList } from './types'; // Import types
 
 const Stack = createStackNavigator<RootStackParamList>();
-
+// Define a custom dark theme
+const DarkTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: '#000',  // Global background color (black)
+    text: '#fff',        // Global text color (white)
+  },
+};
 function AppNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer  theme={DarkTheme}>
       <Stack.Navigator initialRouteName="Welcome">
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />

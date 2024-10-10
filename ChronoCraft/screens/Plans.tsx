@@ -1,18 +1,35 @@
-// Plans.tsx
-import React from "react";
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, ScrollView, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, Text } from "react-native";
 import PlanItem from './PlanItem';
+import { getPlans } from '../db/database'; // Import the function to get plans
 
 const PlanScreen = ({ navigation }) => {
-  // Dummy list of plans for example
-  const dummyPlans = [
-    { id: 1, name: "Plan 1" },
-    { id: 2, name: "Plan 2" },
-    { id: 3, name: "Plan 3" },
-  ];
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true); // State for loading indicator
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const fetchedPlans = await getPlans();
+        if (fetchedPlans.length === 0) {
+          // No plans found, handle it without error
+          setPlans([]);
+        } else {
+          setPlans(fetchedPlans);
+        }
+      } catch (error) {
+        console.error("Failed to fetch plans:", error);
+        Alert.alert("Erreur", "Impossible de charger les plans.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
 
   const handleEditPlan = (plan) => {
-    navigation.navigate("AddPlan", { planToEdit: plan });
+    navigation.navigate("AddPlanScreen", { planToEdit: plan });
   };
 
   const handleRemovePlan = (planId) => {
@@ -20,26 +37,32 @@ const PlanScreen = ({ navigation }) => {
     console.log(`Removing plan with id: ${planId}`);
   };
 
-  const handlePlanPress = (plan) => {
-    navigation.navigate("PlanDetailScreen", { planId: plan.id }); // Pass the plan ID or entire plan object if needed
+  const handleAddPlan = () => {
+    navigation.navigate("AddPlanScreen"); // Navigate to AddPlan screen
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#fff" />; // Loading indicator with white color
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView>
-        {dummyPlans.map((plan) => (
-          <PlanItem
-            key={plan.id}
-            plan={plan}
-            onEdit={() => handleEditPlan(plan)}
-            onRemove={() => handleRemovePlan(plan.id)}
-            onPress={handlePlanPress} // Pass the handlePlanPress function
-          />
-        ))}
+        {plans.length === 0 ? (
+          <Text style={styles.emptyText}>No plans available. Add your first plan!</Text>
+        ) : (
+          plans.map((plan) => (
+            <PlanItem
+              key={plan.id}
+              plan={plan}
+              onEdit={() => handleEditPlan(plan)}
+              onRemove={() => handleRemovePlan(plan.id)}
+              onPress={() => navigation.navigate('PlanDetailScreen', { planId: plan.id })}
+            />
+          ))
+        )}
       </ScrollView>
-
-      {/* Add Plan Button */}
-      <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("AddPlanScreen")}>
+      <TouchableOpacity style={styles.addButton} onPress={handleAddPlan}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
     </View>
@@ -50,28 +73,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5', // Set background color
+    backgroundColor: '#000', // Set background to black
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: '#fff', // Text color set to white
+    marginTop: 20,
   },
   addButton: {
     position: 'absolute',
-    bottom: 30,
-    right: 30,
+    bottom: 20,
+    right: 20,
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007BFF', // Button color
+    backgroundColor: '#007BFF', // Change this color to your preference
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    elevation: 5,
   },
   addButtonText: {
-    color: '#fff',
     fontSize: 30,
-    lineHeight: 60,
+    color: 'white',
   },
 });
 

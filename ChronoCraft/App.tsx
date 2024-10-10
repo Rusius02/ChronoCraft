@@ -1,9 +1,15 @@
 // App.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView, StyleSheet, StatusBar } from "react-native";
 import AppNavigator from './navigator/AppNavigation'; // Adjust the import based on your project structure
+import { setupDatabase } from './db/database';
+
+
 
 const App = () => {
+  useEffect(() => {
+    setupDatabase();
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
